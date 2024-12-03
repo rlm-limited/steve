@@ -20,6 +20,8 @@ package de.rwth.idsg.steve.web.api.dto;
 
 //import de.rwth.idsg.steve.ocpp.OcppTransport;
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 //import java.util.Collections;
 //import java.util.List;
 import lombok.Getter;
@@ -36,13 +38,20 @@ import lombok.Setter;
 //@RequiredArgsConstructor
 public class ApiChargePointStart {
     @Schema(description = "Charge Box ID")
+    @JsonProperty("chargeBoxId")
     private String chargeBoxId;
     @Schema(description = "Connector ID")
+    @JsonProperty("connectorId")
     private Integer connectorId;
     @Schema(description = "OCPP Tag")
+    @JsonProperty("ocppTag")
     private String ocppTag;
 
-    public ApiChargePointStart(String chargeBoxId, Integer connectorId, String ocppTag) {
+    @JsonCreator
+    public ApiChargePointStart(
+        @JsonProperty("chargeBoxId") String chargeBoxId,
+        @JsonProperty("connectorId") Integer connectorId,
+        @JsonProperty("ocppTag") String ocppTag) {
         this.chargeBoxId = chargeBoxId;
         this.connectorId = connectorId;
         this.ocppTag = ocppTag;
