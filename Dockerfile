@@ -24,4 +24,3 @@ COPY . /code
 
 CMD	./mvnw clean package -Pdocker -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2" && \
 	java -XX:MaxRAMPercentage=85 -jar target/steve.jar
-
