@@ -15,10 +15,10 @@ services:
       MYSQL_USER: steve
       MYSQL_PASSWORD: changeme
   steve:
+    image: steve:2.0.4
     container_name: steve.dev.ev.meshpower.co.rw
     hostname: steve.dev.ev.meshpower.co.rw
     restart: unless-stopped
-    build: .
     links:
       - "database:mariadb"
     volumes:
