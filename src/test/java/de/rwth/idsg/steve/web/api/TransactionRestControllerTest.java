@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import de.rwth.idsg.steve.service.MeterValueService;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -58,11 +59,14 @@ public class TransactionRestControllerTest extends AbstractControllerTest {
     @Mock
     private TransactionService transactionService;
 
+    @Mock
+    private MeterValueService meterValueService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new TransactionsRestController(transactionService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new TransactionsRestController(transactionService, meterValueService))
             .setControllerAdvice(new ApiControllerAdvice())
             .setMessageConverters(new JacksonJsonHttpMessageConverter(objectMapper))
             .alwaysExpect(content().contentType("application/json"))

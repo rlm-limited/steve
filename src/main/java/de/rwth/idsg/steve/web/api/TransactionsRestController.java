@@ -20,24 +20,28 @@ package de.rwth.idsg.steve.web.api;
 
 import de.rwth.idsg.steve.SteveException;
 import de.rwth.idsg.steve.repository.dto.Transaction;
+import de.rwth.idsg.steve.service.MeterValueService;
 import de.rwth.idsg.steve.service.TransactionService;
 import de.rwth.idsg.steve.web.api.ApiControllerAdvice.ApiErrorResponse;
+import de.rwth.idsg.steve.web.dto.MeterValueDto;
 import de.rwth.idsg.steve.web.dto.TransactionQueryForm;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -58,6 +62,7 @@ import java.util.List;
 public class TransactionsRestController {
 
     private final TransactionService transactionService;
+    private final MeterValueService meterValueService;
 
     @Operation(description = """
         Returns a list of transactions based on the query parameters.
@@ -80,5 +85,37 @@ public class TransactionsRestController {
         var response = transactionService.getTransactions(params);
         log.debug("Read response for query: {}", response);
         return response;
+    }
+
+    @Operation(description = """
+        Returns the meter values for a single transaction.
+        Allows specifying the number of values to return and the sort order (by timestamp).
+        """)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved meter values"),
+        @ApiResponse(responseCode = "400", description = "Bad Request", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))}),
+        @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))}),
+        @ApiResponse(responseCode = "404", description = "Transaction not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))}),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})}
+    )
+    @GetMapping(value = "/{transactionId}/metervalues")
+    public List<MeterValueDto> getMeterValues(
+        @Parameter(description = "ID of the transaction to retrieve meter values for", required = true)
+        @PathVariable int transactionId,
+
+        @Parameter(description = "The number of meter values to return. If not specified, all values are returned.")
+        @RequestParam(value = "size", required = false) Integer size,
+
+        @Parameter(description = "The sort order for the meter values by timestamp. 'asc' for oldest first, 'desc' for most recent first.",
+                   schema = @Schema(type = "string", allowableValues = {"asc", "desc"}, defaultValue = "desc"))
+        @RequestParam(value = "sort", defaultValue = "desc") String sort
+    ) {
+        log.debug("Read request for meter values for transactionId: {}, size: {}, sort: {}", transactionId, size, sort);
+
+        if (!"asc".equalsIgnoreCase(sort) && !"desc".equalsIgnoreCase(sort)) {
+            throw new SteveException.BadRequest("Invalid 'sort' parameter. Allowed values are 'asc' or 'desc'.");
+        }
+
+        return meterValueService.getMeterValuesForTransaction(transactionId, size, sort);
     }
 }
